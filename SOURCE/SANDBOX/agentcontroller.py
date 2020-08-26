@@ -6,7 +6,7 @@ import mapcontroller as mapctrl
 from queue import heappop,heappush
 from enum import IntEnum
 from pysat.solvers import Glucose4
-
+import numpy as np
 
 def h_n(start_pos:tuple,des_pos:tuple):
     return abs(start_pos[0] - des_pos[0]) + abs(start_pos[1] - des_pos[1])
@@ -49,7 +49,6 @@ class KnowledgeBase:
 		self.agentBrainPit = Glucose4()
 		self.agentFormulaWumpus = []
 		self.sizeMap = sizeMap
-
 	# Check specified position is safe or not
 	def IsWumpusThere(self,agentPos: tuple):
 		return self.agentBrainWumpus.solve([self.ConvertPosToNum(agentPos,1)])
@@ -112,35 +111,35 @@ class AgentController:
 		self.visit = []
 		self.action = []
 		self.wumpus_pos = []
+		self.is_climb_out = False
 	def Probing(self):
 		# Current position of agent
 		cur_pos = self.map_controller.agentPosition
-		stack_safe_move = []
 		self.visit.append(cur_pos)
-		while True:
-			action,safe_move = self.GetAction(cur_pos)
-			if(action is not None):
-				if(action == Action.pick):
-					stack_safe_move.append(cur_pos)
-					self.PickGold(cur_pos,self.map_controller.agentMap[cur_pos])
-					self.action.append((Action.pick,cur_pos))
-					continue
-				elif(action == Action.move):
-					for ele in safe_move:
-						if ele not in stack_safe_move:
-							stack_safe_move.append(ele)
-			try:
-				next_move = stack_safe_move.pop()
-			except:
-				# That mean over, too much pit and wumpus agent can perceive
-				break
-			move_path = self.Move(cur_pos,next_move)
-			for i in move_path:
-				self.action.append((Action.move,i))
-			cur_pos = next_move
-			self.visit.append(cur_pos)
-		# Back to cave
-
+		action,safe_move = self.GetAction(cur_pos)
+		if(action is not None):
+			if(action == Action.pick):
+				self.PickGold(cur_pos,self.map_controller.agentMap[cur_pos])
+				return (Action.pick,cur_pos)
+			elif(action == Action.move):
+				for ele in safe_move:
+					if ele not in self.action:
+						self.action.append(ele)
+		next_move = None
+		try:
+			next_move = self.action.pop()
+		except:
+			# That mean over, too much pit and wumpus agent can perceive
+			# Back to cave or take risk use arrow
+			if(not self.is_climb_out):
+				next_move = self.map_controller.cave
+				self.is_climb_out = True
+		if(next_move == None):
+			return None,None
+		move_path = self.Move(cur_pos,next_move)
+		if(move_path != next_move):
+			self.action.append(next_move)
+		return (Action.move,move_path)
 
 	def GetAction(self,_pos):
 		cur_state = self.map_controller.agentMap[_pos]
@@ -178,13 +177,14 @@ class AgentController:
 			stench_sense = True
 		self.agentKB.AddNewKB(_pos,stench_sense,breeze_sense)
 	def Move(self,cur_pos,next_pos):
-		self.map_controller.AgentMove(next_pos)
-		path,cost = astar_function(self.map_controller.agentMap,cur_pos,next_pos,self.sizeMap[0],self.sizeMap[1])
-		if(path is not None):
-			self.score -= 10*cost
-		return path
+		tmp_map = np.copy(self.map_controller.agentMap)
+		tmp_map[next_pos] = 0
+		path,cost = astar_function(tmp_map,cur_pos,next_pos,self.sizeMap[0],self.sizeMap[1])
+		if(len(path) > 0):
+			self.map_controller.AgentMove(path[0])
+			return path[0]
+		return None
 	def Shoot(self,_pos):
-		self.score -= 100
 		pass
 	def PickGold(self,_pos,state = int(mapctrl.State.G)):
 		if(state == int(mapctrl.State.G)):
@@ -196,20 +196,39 @@ class AgentController:
 		else:
 			self.map_controller.UpdateAgentMap(_pos,6)
 		# Update Score
-		self.score += 100
-	def AgentPlay(self):
+	def AgentInitialize(self):
 		self.agentKB.GotoSchool()
-		self.Probing()
-		print(self.action)
-		print(self.score)
+		return self.map_controller.agentPosition,self.score,self.map_controller.agentMap
+	def AgentPlay(self):
+		action,next_move = self.Probing()
+		if(action is None):
+			return None,None,None
+		if(action == Action.move):
+			self.score -= 10
+		elif(action == Action.pick):
+			self.score += 100
+		else:
+			self.score -= 100
+		return (action,next_move),self.score,self.map_controller.agentMap
+
 	def DelAgent(self):
 		# Remove KB
-
+		self.agentKB = None
 		# Remove AgentMap:
-
-		pass
+		self.map_controller = None
 ##########################################################################################
 
 
 agent = AgentController()
-agent.AgentPlay()
+x,y,z = agent.AgentInitialize()
+print(x)
+print(y)
+print(z)
+while True:
+	x,y,z = agent.AgentPlay()
+	if(x != None):
+		print(x)
+		print(y)
+		print(z)
+	else:
+		break
