@@ -23,10 +23,14 @@ class Character(pg.sprite.Sprite):
 
         size = (32, 32)
         self.pos = tuple([ele * 32 for ele in reversed(pos)])
+        self.prev_pos = self.pos
         self.rect = pg.Rect(self.pos, size)
 
         self.agent = agentcontroller.AgentController()
         self.agent.AgentInitialize()
+
+        self.time = 0
+        self.event_receive_time = 0.1
 
         """ Handle Animation """
         self.images_right = []
@@ -54,7 +58,7 @@ class Character(pg.sprite.Sprite):
         self.index = 0
         self.image = self.images[self.index]
 
-        self.animation_time = 0.5
+        self.animation_time = 0.1
         self.current_time = 0
 
         self.animation_frames = 2
@@ -67,6 +71,16 @@ class Character(pg.sprite.Sprite):
         Args:
             dt: Time elapsed between each frame.
         """
+        if self.speed[0] > 0:
+            self.images = self.images_right
+        elif self.speed[0] < 0:
+            self.images = self.images_left
+
+        if self.speed[1] > 0:
+            self.images = self.images_down
+        elif self.speed[1] < 0:
+            self.images = self.images_up
+
         self.current_time += dt
         if self.current_time >= self.animation_time:
             self.current_time = 0
@@ -77,6 +91,16 @@ class Character(pg.sprite.Sprite):
         """
         Updates the image of Sprite every 6 frame (approximately every 0.1 second if frame rate is 60).
         """
+        if self.speed[0] > 0:
+            self.images = self.images_right
+        elif self.speed[0] < 0:
+            self.images = self.images_left
+
+        if self.speed[1] > 0:
+            self.images = self.images_down
+        elif self.speed[1] < 0:
+            self.images = self.images_up
+
         self.current_frame += 1
         if self.current_frame >= self.animation_frames:
             self.current_frame = 0
@@ -91,19 +115,26 @@ class Character(pg.sprite.Sprite):
 
     # Movement
     def play(self, dt):
-        self.current_time += dt
-        if self.current_time >= self.animation_time:
-            task, _, _ = self.agent.Play()
+        map_state = None
 
-            action, newpos = task
+        self.time += dt
+        if self.time >= self.event_receive_time:
+            self.time = 0
+            task, _, map_state = self.agent.AgentPlay()
 
-            if action == agentcontroller.Action.move:
-                dst = tuple([ele * 32 for ele in reversed(newpos)])
-                src = self.pos
+            if task is not None:
+                action, newpos = task
 
-                self.speed[0], self.speed[1] = tuple([destination - source for source, destination in zip(src, dst)])
+                if action == agentcontroller.Action.move:
+                    self.prev_pos = self.pos
 
-                for idx, speed_cor in enumerate(self.speed):
-                    self.speed[idx] = speed_cor * 32
+                    dst = tuple([ele * 32 for ele in reversed(newpos)])
+                    src = self.pos
 
-                self.rect.move_ip(self.speed)
+                    self.speed[0], self.speed[1] = tuple([destination - source for source, destination in zip(src, dst)])
+
+                    self.rect.move_ip(self.speed)
+
+                    self.pos = dst
+
+        return map_state

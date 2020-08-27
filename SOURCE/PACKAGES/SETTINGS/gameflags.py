@@ -23,7 +23,29 @@ BUTTON_BG = 'Button_UI.png'
 """# Fonts #"""
 FONT_FIPPS = 'Fipps-Regular.otf'
 FONT_PIXELLCD = 'Pixel-LCD-7.ttf'
+"""# Grounds #"""
+GROUND_CENSORED = 'Ground_Censored.png'
+GROUND_REVEALED = 'Ground_2.png'
+GROUND_BREEZE = 'Ground_B.png'
+GROUND_STENCH = 'Ground_S.png'
+GROUND_BREEZESTENCH = 'Ground_BS.png'
+GROUND_GOLD = 'Gold.png'
 
+""" Map """
+MAP = 'map-01.txt'
+
+""" Game states """
+INTRO = 'intro'
+LVLSELECT = 'levelselecting'
+MAPSELECT = 'mapselecting'
+HOLD = 'hold'
+PLAYING = 'playing'
+WINNING = 'winning'
+SURRENDER = 'surrender'
+GAMEOVER = 'gameover'
 # Character's flags
-
+MAIN_CHARACTER_LEFT = ['Char_5.png', 'Char_4.png', 'Char_6.png']
+MAIN_CHARACTER_RIGHT = ['Char_8.png', 'Char_7.png', 'Char_9.png']
+MAIN_CHARACTER_UP = ['Char_11.png', 'Char_10.png', 'Char_12.png']
+MAIN_CHARACTER_DOWN = ['Char_2.png', 'Char_1.png', 'Char_3.png']
 # Monsters' flags

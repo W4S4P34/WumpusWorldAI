@@ -217,18 +217,3 @@ class AgentController:
 		# Remove AgentMap:
 		self.map_controller = None
 ##########################################################################################
-
-
-agent = AgentController()
-x,y,z = agent.AgentInitialize()
-print(x)
-print(y)
-print(z)
-while True:
-	x,y,z = agent.AgentPlay()
-	if(x != None):
-		print(x)
-		print(y)
-		print(z)
-	else:
-		break

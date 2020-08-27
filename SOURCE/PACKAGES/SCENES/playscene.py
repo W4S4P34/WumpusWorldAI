@@ -1,98 +1,87 @@
 ##########################
 #    Custom Libraries    #
 from . import scenebase as scene
-from . import titlescene
+# from . import titlescene
 from ..SETTINGS import gameflags as flags
-from ..SETTINGS import gamesettings as settings
-# from ..SETTINGS import gamehandler as handle
-from ..OBJECTS import button
-from ..OBJECTS import text
+# from ..SETTINGS import gamesettings as settings
+from ..SETTINGS import gamehandler as handle
+from ..OBJECTS import mapcontroller
+from ..OBJECTS import agentcontroller
+from ..OBJECTS import character
+# from ..OBJECTS import button
+# from ..OBJECTS import text
 ##########################
 #   Built-in Libraries   #
-import os
+# import os
 import pygame as pg
 
 
 class PlayScene(scene.SceneBase):
     def __init__(self, screen=None):
         super().__init__(screen)
+
+        """ Init Handler """
+        self.handler = handle.Handler()
+
         # Add background
-        # The game scene is just a gray screen
-        self.screen.fill((50, 50, 50))
+        self.default_map_size = (320, 320)
+        self.screen = pg.display.set_mode(self.default_map_size)
+
+        ground, ground_rect = self.handler.load_image(flags.TYPE_GROUND, flags.GROUND_CENSORED)
+        for y_cor in range(10):
+            for x_cor in range(10):
+                self.screen.blit(ground, (x_cor * 32, y_cor * 32), ground_rect)
+
+        # Character Init
+        initpos = mapcontroller.MapController.GetInstance().cave
+        self.character = character.Character(initpos)
+        self.character_sprite = pg.sprite.Group(self.character)
+
+        # Grounds
+        self.old_ground, _ = self.handler.load_image(flags.TYPE_GROUND, flags.GROUND_REVEALED)
+        self.new_ground, _ = self.handler.load_image(flags.TYPE_GROUND, flags.GROUND_REVEALED)
 
         # Buttons
         """ Buttons list """
         """# Create buttons list #"""
         self.button_list = []
-        for _ in range(2):
-            self.button_list.append(button.Button(flags.BUTTON_BG))
 
         """# Put buttons in right places #"""
-        distance_hor = 30      # Horizontal distance between buttons
-        distance_ver = 0       # Vertical distance between buttons
-        col_num = 2
-        # row_num = 1
-
-        for idx, bt in enumerate(self.button_list):
-            bt.rect.center = self.screen.get_rect().center
-
-            bt_width = bt.rect[2]
-            bt_height = bt.rect[3]
-
-            coef = 1
-            if (idx % 2 == 0):
-                coef = -1
-            else:
-                coef = 1
-
-            bt.rect.move_ip(((bt_width + distance_hor) * coef,
-                            128 + (idx // col_num) * (bt_height + distance_ver)))
 
         # Texts
         pg.font.init()
         """ Texts list """
-        """# Game title #"""
-        path = os.path.join(settings.PATH, flags.F_ASSET, flags.TYPE_FONT, flags.FONT_FIPPS)
-
-        title_font = pg.font.Font(path, 35)
-
-        self.title = text.Text('Not implement yet!', title_font, (255, 255, 255))
-        self.title.text_rect.center = self.screen.get_rect().center
-        self.screen.blit(self.title.text, self.title.text_rect)
         """# Buttons' texts list #"""
         self.text_list = []
 
-        button_font = pg.font.Font(path, 20)
+        # Gameplay
+        self.countdown_timer = 0
+        self.map_state = None
 
-        for idx in range(len(self.button_list)):
-            txt = ''
-            if idx == 0:
-                txt = 'Back'
-            elif idx == 1:
-                txt = 'Exit'
-            self.text_list.append(text.Text(txt, button_font, (255, 255, 255)))
-
-        for idx, t in enumerate(self.text_list):
-            t.text_rect.center = self.button_list[idx].rect.center
-            t.text_rect.move_ip((5, 0))
+        # State
+        self.state = flags.HOLD
 
     def ProcessInput(self, events, pressed_keys):
-        for event in events:
-            if event.type == pg.MOUSEBUTTONDOWN:
-                for idx, bt in enumerate(self.button_list):
-                    if bt.rect.collidepoint(pg.mouse.get_pos()):
-                        if idx == 0:
-                            self.SwitchToScene(titlescene.TitleScene(self.screen))
-                            bt.is_over = False
-                        elif idx == 1:
-                            self.Terminate()
+        pass
 
     def Update(self, deltatime):
-        ##################################################################################
-        # Collisions
-        for bt in self.button_list:
-            bt.switch()
-        ##################################################################################
+        # Holding
+        if self.state == flags.HOLD:
+            self.countdown_timer -= deltatime
+            if self.countdown_timer <= 0:
+                self.countdown_timer = 0
+                self.state = flags.PLAYING
+        # Playing
+        elif self.state == flags.PLAYING:
+            self.countdown_timer -= deltatime
+            if self.countdown_timer <= 0:
+                self.map_state = self.character.play(deltatime)
+                self.character_sprite.update(deltatime)
+
+                if self.map_state is not None:
+                    self.old_ground, self.new_ground = self.handler.detect_local_change(self.map_state,
+                                                                                        self.character.prev_pos,
+                                                                                        self.character.pos)
 
     def Render(self):
         """Interactive UI"""
@@ -100,3 +89,8 @@ class PlayScene(scene.SceneBase):
             self.screen.blit(bt.image, bt.rect)
         for t in self.text_list:
             self.screen.blit(t.text, t.text_rect)
+        """Character Render"""
+        if self.map_state is not None:
+            self.screen.blit(self.old_ground, self.character.prev_pos)
+            self.screen.blit(self.new_ground, self.character.pos)
+            self.character_sprite.draw(self.screen)
