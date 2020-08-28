@@ -21,8 +21,8 @@ class Character(pg.sprite.Sprite):
         """  Handle Gameplay """
         self.speed = [0, 0]
 
-        size = (32, 32)
-        self.pos = tuple([ele * 32 for ele in reversed(pos)])
+        size = (48, 48)
+        self.pos = tuple([ele * 48 for ele in reversed(pos)])
         self.prev_pos = self.pos
         self.rect = pg.Rect(self.pos, size)
 
@@ -31,6 +31,10 @@ class Character(pg.sprite.Sprite):
 
         self.time = 0
         self.event_receive_time = 0.1
+
+        self.task = -1
+        self.score = 0
+        self.map_state = None
 
         """ Handle Animation """
         self.images_right = []
@@ -115,26 +119,23 @@ class Character(pg.sprite.Sprite):
 
     # Movement
     def play(self, dt):
-        map_state = None
+        self.task = -1
+        self.map_state = None
 
         self.time += dt
         if self.time >= self.event_receive_time:
             self.time = 0
-            task, _, map_state = self.agent.AgentPlay()
+            self.task, self.score, self.map_state = self.agent.AgentPlay()
 
-            if task is not None:
-                action, newpos = task
+            if self.task is not None:
+                action, newpos = self.task
 
-                if action == agentcontroller.Action.move:
-                    self.prev_pos = self.pos
+                dst = tuple([ele * 48 for ele in reversed(newpos)])
+                src = self.pos
 
-                    dst = tuple([ele * 32 for ele in reversed(newpos)])
-                    src = self.pos
+                self.speed[0], self.speed[1] = tuple([destination - source for source, destination in zip(src, dst)])
 
-                    self.speed[0], self.speed[1] = tuple([destination - source for source, destination in zip(src, dst)])
+                self.rect.move_ip(self.speed)
 
-                    self.rect.move_ip(self.speed)
-
-                    self.pos = dst
-
-        return map_state
+                self.prev_pos = self.pos
+                self.pos = dst

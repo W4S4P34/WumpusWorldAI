@@ -24,24 +24,27 @@ BUTTON_BG = 'Button_UI.png'
 FONT_FIPPS = 'Fipps-Regular.otf'
 FONT_PIXELLCD = 'Pixel-LCD-7.ttf'
 """# Grounds #"""
+GROUND_ENTRANCE = 'Ground_E.png'
 GROUND_CENSORED = 'Ground_Censored.png'
-GROUND_REVEALED = 'Ground_2.png'
+GROUND_REVEALED = 'Ground.png'
 GROUND_BREEZE = 'Ground_B.png'
 GROUND_STENCH = 'Ground_S.png'
 GROUND_BREEZESTENCH = 'Ground_BS.png'
-GROUND_GOLD = 'Gold.png'
+GROUND_GOLD = 'Ground_G.png'
+GROUND_GOLDBREEZE = 'Ground_GB.png'
+GROUND_GOLDSTENCH = 'Ground_GS.png'
+GROUND_GOLDBREEZESTENCH = 'Ground_GBS.png'
+GROUND_PIT = 'Ground_P.png'
+GROUND_WUMPUS = 'Ground_W.png'
 
 """ Map """
 MAP = 'map-01.txt'
 
 """ Game states """
 INTRO = 'intro'
-LVLSELECT = 'levelselecting'
 MAPSELECT = 'mapselecting'
 HOLD = 'hold'
 PLAYING = 'playing'
-WINNING = 'winning'
-SURRENDER = 'surrender'
 GAMEOVER = 'gameover'
 # Character's flags
 MAIN_CHARACTER_LEFT = ['Char_5.png', 'Char_4.png', 'Char_6.png']

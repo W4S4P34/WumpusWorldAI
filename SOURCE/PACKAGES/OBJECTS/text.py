@@ -21,7 +21,7 @@ class Text(pg.sprite.Sprite):
         self.text = self.font.render(text, 1, self.color)
         new_text_rect = self.text.get_rect()
 
-        current_position = tuple(self.text_rect[0], self.text_rect[1])
-        current_rect = tuple(new_text_rect[2], new_text_rect[3])
+        current_position = tuple([self.text_rect[0], self.text_rect[1]])
+        current_rect = tuple([new_text_rect[2], new_text_rect[3]])
 
         self.text_rect = pg.Rect(current_position, current_rect)

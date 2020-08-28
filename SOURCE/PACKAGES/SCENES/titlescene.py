@@ -70,6 +70,9 @@ class TitleScene(scene.SceneBase):
             t.text_rect.center = self.button_list[idx].rect.center
             t.text_rect.move_ip((5, 0))
 
+        # State
+        self.state = flags.INTRO
+
     def ProcessInput(self, events, pressed_keys):
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN:
@@ -77,7 +80,6 @@ class TitleScene(scene.SceneBase):
                     if bt.rect.collidepoint(pg.mouse.get_pos()):
                         if idx == 0:
                             self.SwitchToScene(playscene.PlayScene(self.screen))
-                            bt.is_over = False
                         elif idx == 1:
                             self.Terminate()
 

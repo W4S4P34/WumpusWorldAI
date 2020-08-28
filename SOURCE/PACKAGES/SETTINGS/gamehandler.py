@@ -35,8 +35,8 @@ class Handler():
         prev = np.array(prev_pos)
         cur = np.array(pos)
 
-        prev = prev // 32
-        cur = cur // 32
+        prev = prev // 48
+        cur = cur // 48
 
         prev_ground = map_state[prev[1], prev[0]]
         cur_ground = map_state[cur[1], cur[0]]
@@ -47,6 +47,18 @@ class Handler():
             old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_STENCH)
         elif prev_ground == int(mapcontroller.State.BS):
             old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_BREEZESTENCH)
+        elif prev_ground == int(mapcontroller.State.G):
+            old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLD)
+        elif prev_ground == int(mapcontroller.State.GB):
+            old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLDBREEZE)
+        elif prev_ground == int(mapcontroller.State.GS):
+            old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLDSTENCH)
+        elif prev_ground == int(mapcontroller.State.GBS):
+            old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLDBREEZESTENCH)
+        elif prev_ground == int(mapcontroller.State.P):
+            old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_PIT)
+        elif prev_ground == int(mapcontroller.State.W):
+            old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_WUMPUS)
         else:
             old_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_REVEALED)
 
@@ -56,6 +68,18 @@ class Handler():
             new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_STENCH)
         elif cur_ground == int(mapcontroller.State.BS):
             new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_BREEZESTENCH)
+        elif cur_ground == int(mapcontroller.State.G):
+            new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLD)
+        elif cur_ground == int(mapcontroller.State.GB):
+            new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLDBREEZE)
+        elif cur_ground == int(mapcontroller.State.GS):
+            new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLDSTENCH)
+        elif cur_ground == int(mapcontroller.State.GBS):
+            new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_GOLDBREEZESTENCH)
+        elif cur_ground == int(mapcontroller.State.P):
+            new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_PIT)
+        elif cur_ground == int(mapcontroller.State.W):
+            new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_WUMPUS)
         else:
             new_ground, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_REVEALED)
 
