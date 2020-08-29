@@ -54,6 +54,8 @@ class KnowledgeBase:
 		return self.agentBrainWumpus.solve([self.ConvertPosToNum(agentPos,1)])
 	def IsPitThere(self,agentPos : tuple):
 		return self.agentBrainPit.solve([self.ConvertPosToNum(agentPos,1)])
+	def IsStenchThere(self,pos : tuple):
+		return self.agentBrainWumpus.solve([self.ConvertPosToNum(pos,-1,1)]) == False
 	# Add KB for agent (CNF: w -> a ^ b ^ c ^ d)
 	def GotoSchool(self):
 		_adjCell = [(1,0),(0,1),(-1,0),(0,-1)]
@@ -85,8 +87,10 @@ class KnowledgeBase:
 		# Tell KB that wumpus disappear
 		tmp = _list_pos.pop(0)
 		self.agentFormulaWumpus.append([self.ConvertPosToNum(tmp,-1)])
+		self.agentBrainPit.add_clause([self.ConvertPosToNum(tmp,-1)])
 		# Remove Stench
-		for i in range(_list_pos):
+		
+		for i in _list_pos:
 			tmp = self.ConvertPosToNum(i,1,1)
 			try:
 				self.agentFormulaWumpus.remove([tmp])
@@ -94,6 +98,7 @@ class KnowledgeBase:
 				print("Stench is not exists in formula")
 			self.agentFormulaWumpus.append([tmp*-1])
 		self.agentBrainWumpus.delete()
+		self.agentBrainWumpus = Glucose4()
 		self.agentBrainWumpus.append_formula(self.agentFormulaWumpus)
 	def ConvertPosToNum(self,pos : tuple,sign = 1,is_stench = 0):
 		return int((pos[1]*self.sizeMap[0]+pos[0]+1 + is_stench*self.sizeMap[0]*self.sizeMap[1])*sign)
@@ -110,8 +115,15 @@ class AgentController:
 		self.score = 0
 		self.visit = []
 		self.action = []
+		self.bound_risk = 1
 		self.wumpus_pos = []
+		self.shoot_pos = None
 		self.is_climb_out = False
+	def TakeRisk(self):
+		adj_cell = [(0,-1),(-1,0),(0,1),(1,0)]
+		cur_pos = self.map_controller.agentPosition
+		for i in adj_cell:
+			pass
 	def Probing(self):
 		# Current position of agent
 		cur_pos = self.map_controller.agentPosition
@@ -128,12 +140,42 @@ class AgentController:
 		next_move = None
 		try:
 			next_move = self.action.pop()
+			print(next_move)
 		except:
 			# That mean over, too much pit and wumpus agent can perceive
 			# Back to cave or take risk use arrow
-			if(not self.is_climb_out):
-				next_move = self.map_controller.cave
-				self.is_climb_out = True
+			if(self.shoot_pos is not None):
+				self.bound_risk -= 1
+				return self.Shoot()
+			elif(next_move is None and self.bound_risk > 0):
+				self.wumpus_pos.sort(reverse = True)
+				wumpus = None
+				while True:
+					try:
+						wumpus = self.wumpus_pos.pop(0)
+					except:
+						wumpus = None
+						break
+					if(wumpus[0] <= 3):
+						wumpus = wumpus[1]
+						break
+				if(wumpus is None):
+						next_move = self.map_controller.cave
+						self.is_climb_out = True
+						self.bound_risk = 0
+				else:
+					adj_cell = [(0,-1),(-1,0),(0,1),(1,0)]
+					for i in adj_cell:
+						if(self.map_controller.agentMap[wumpus[0]+i[0],wumpus[1]+i[1]] is not None):
+							self.action.append((wumpus[0]+i[0],wumpus[1]+i[1]))
+							break
+					self.shoot_pos = wumpus
+					next_move = self.action.pop()
+					if(next_move == cur_pos):
+						return self.Probing()
+			elif(not self.is_climb_out):
+					next_move = self.map_controller.cave
+					self.is_climb_out = True
 		if(next_move == None):
 			return None,None
 		move_path = self.Move(cur_pos,next_move)
@@ -141,6 +183,7 @@ class AgentController:
 			self.action.append(next_move)
 		return (Action.move,move_path)
 
+		
 	def GetAction(self,_pos):
 		cur_state = self.map_controller.agentMap[_pos]
 		# State found Gold
@@ -154,12 +197,24 @@ class AgentController:
 			tmp = (_pos[0]+i[0],_pos[1]+i[1])
 			if tmp in self.visit or not IsValid(tmp[0],tmp[1],self.sizeMap):
 				continue
+			# Check is Wumpus there by logic inference
+			if(self.agentKB.IsWumpusThere(tmp)):
+				amount_of_stench = 0
+				for j in _adj_cell:
+					if(self.agentKB.IsStenchThere((j[0]+tmp[0],j[1]+tmp[1]))):
+						amount_of_stench += 1
+				if(amount_of_stench >= 2):
+					flag_append = True
+					for k in range(len(self.wumpus_pos)):
+						if(self.wumpus_pos[k][1] == tmp):
+							self.wumpus_pos[k] = (amount_of_stench,tmp)
+							flag_append = False
+							break
+					if(flag_append):
+						self.wumpus_pos.append((amount_of_stench,tmp))
+				continue
 			# Check is Pit there by logic inference
 			if(self.agentKB.IsPitThere(tmp)):
-				continue
-			# Check is Wumpus there by logic inference
-			elif(self.agentKB.IsWumpusThere(tmp)):
-				self.wumpus_pos.append(tmp)
 				continue
 			# Safe
 			safe_move.append(tmp)
@@ -184,8 +239,16 @@ class AgentController:
 			self.map_controller.AgentMove(path[0])
 			return path[0]
 		return None
-	def Shoot(self,_pos):
-		pass
+	def Shoot(self):
+		state_change = self.map_controller.Shoot(self.shoot_pos)
+		if(len(state_change) > 0):
+			self.agentKB.RemoveKB(state_change)
+		tmp = self.shoot_pos
+		for i in self.wumpus_pos:
+			if(i[1] == tmp):
+				self.wumpus_pos.remove(i)
+		self.shoot_pos = None
+		return Action.shoot,tmp
 	def PickGold(self,_pos,state = int(mapctrl.State.G)):
 		if(state == int(mapctrl.State.G)):
 			self.map_controller.UpdateAgentMap(_pos,0)
@@ -218,17 +281,89 @@ class AgentController:
 		self.map_controller = None
 ##########################################################################################
 
+import random
+import os
+def RandomMap():
+	size_map = 10
+	ind = 1
+	map = np.full((10,10),None)
+	max_randomtext = 10
+	while True:
+		if(max_randomtext == 0):
+			break
+		map = np.full((10,10),None)
+		max_gold = random.randint(5,15)
+		max_pit = random.randint(3,5)
+		max_wumpus = random.randint(1,3)
+		while True:
+			if(max_gold > 0):
+				list = []
+				gold_pos = (random.randint(0,9),random.randint(0,9))
+				if(map[gold_pos] is None):
+					list.append('G')
+					map[gold_pos] = np.array(list)[0]
+					max_gold -= 1
+			if(max_pit > 0):
+				list = []
+				pit_pos = (random.randint(0,9),random.randint(0,9))
+				if(map[pit_pos] is None):
+					list.append('P')
+					map[pit_pos] = np.array(list)[0]
+					max_pit -= 1
+			if(max_wumpus > 0):
+				list = []
+				wumpus_pos = (random.randint(0,9),random.randint(0,9))
+				if(map[wumpus_pos] is None):
+					list.append('W')
+					map[wumpus_pos] = np.array(list)[0]
+					max_wumpus -= 1
+			if(max_wumpus == 0 and max_pit == 0 and max_gold == 0):
+				break
+		adj = [(1,0),(-1,0),(0,1),(0,-1)]
+		for i in range(size_map):
+			for j in range(size_map):
+				if(map[i,j] is None or map[i,j] == 'G'):
+					lists = ""
+					if(map[i,j] == 'G'):
+						lists += "G"
+					is_Stench = False
+					is_Breeze = False
+					for k in adj:
+						tmp = (i+k[0],j+k[1])
+						if(IsValid(tmp[0],tmp[1],(size_map,size_map))):
+							if(map[tmp[0],tmp[1]] == 'P' and ('B' not in lists)):
+								lists += "B"
+							elif(map[tmp[0],tmp[1]] == 'W' and ('S' not in lists)):
+								lists += "S"
+					if(len(lists) == 0):
+						lists += "-"
+					map[i,j] = np.array(lists)
+		agent_pos = None
+		while True:
+			agent_pos = (random.randint(0,9),random.randint(0,9))
+			if(map[agent_pos] == "-"):
+				break
+		map[agent_pos] = "A"
+		path = os.getcwd() + "\SANDBOX\INPUT\map"
+		path = path + "-" + str(ind) + ".txt"
+		f = open(path,"w")
+		f.write("10\n")
+		for i in range(len(map)):
+			for j in range(len(map[0])):
+				ele = str(map[i,j])
+				f.write(ele)
+				f.write(".")
+			f.write("\n")
+		f.close()
+		ind += 1
+		max_randomtext -= 1
 
+#RandomMap()
 agent = AgentController()
-x,y,z = agent.AgentInitialize()
-print(x)
-print(y)
-print(z)
+agent.AgentInitialize()
 while True:
 	x,y,z = agent.AgentPlay()
-	if(x != None):
-		print(x)
-		print(y)
-		print(z)
-	else:
+	if(x is None):
 		break
+	print(x,y)
+	print(z)

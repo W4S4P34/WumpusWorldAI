@@ -53,7 +53,57 @@ class MapController:
 	def AgentMove(self,_pos : tuple):
 		self.agentPosition = _pos
 		self.agentMap[self.agentPosition] = self.map[self.agentPosition]
-
+	def Shoot(self,_pos : tuple):
+		if(self.map[_pos] == int(State.W)):
+			list_change = []
+			adj_cell = [(1,0),(-1,0),(0,1),(0,-1)]
+			list_change.append(_pos)
+			self.map[_pos] = int(State.EP)
+			change = self.ChangeState(_pos)
+			self.map[_pos] = change
+			self.agentMap[_pos] = change
+			for i in adj_cell:
+				tmp = (_pos[0]+i[0],_pos[1]+i[1])
+				if( not (tmp[0] >= 0 and tmp[0] < self.width and tmp[1] >= 0 and tmp[1] < self.height)):
+					continue
+				change = self.ChangeState(tmp)
+				if(self.agentMap[tmp] != None):
+					if(change != int(State.S) and change != int(State.BS) and change != int(State.GS) and change != int(State.GBS)):
+						list_change.append(tmp)
+					self.agentMap[tmp] = change
+					self.map[tmp] = change
+				else:
+					self.map[tmp] = change
+			return list_change
+		return []
+	def ChangeState(self,_pos : tuple):
+		adj_cell = [(1,0),(-1,0),(0,1),(0,-1)]
+		is_wumpus = False
+		is_pit = False
+		for i in adj_cell:
+			tmp = (_pos[0]+i[0],_pos[1]+i[1])
+			if( not (tmp[0] >= 0 and tmp[0] < self.width and tmp[1] >= 0 and tmp[1] < self.height)):
+				continue
+			if(self.map[tmp] == int(State.W)):
+				is_wumpus = True
+			elif(self.map[tmp] == int(State.P)):
+				is_pit = True
+		if(self.map[_pos] == int(State.G) or self.map[_pos] == int(State.GB) or self.map[_pos] == int(State.GS) or self.map[_pos] == int(State.GBS)):
+			if(is_wumpus and is_pit):
+				return int(State.GBS)
+			if(is_wumpus):
+				return int(State.GS)
+			if(is_pit):
+				return int(State.GB)
+			return int(State.G)
+		else:
+			if(is_wumpus and is_pit):
+				return int(State.BS)
+			if(is_wumpus):
+				return int(State.S)
+			if(is_pit):
+				return int(State.B)
+			return int(State.EP)
 def ConvertToMyMap(_map,width,height):
 	_maze = np.zeros(_map.shape,dtype = np.uint8)
 	for i in range(width):
@@ -81,7 +131,7 @@ def ConvertToMyMap(_map,width,height):
 	return _maze
 
 def ReadFile():
-	path = os.getcwd() + "\map-1.txt"
+	path = os.getcwd() + "\SANDBOX\INPUT\map-0.txt"
 	file = open(path,'rt')
 	_sizeMap = int(file.readline())
 	_list_map = []
