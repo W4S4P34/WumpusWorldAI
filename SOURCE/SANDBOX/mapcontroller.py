@@ -30,11 +30,17 @@ class MapController:
 			self.width = len(_map)
 			self.height = len(_map[0])
 			self.map = ConvertToMyMap(_map,self.width,self.height)
+			self.originMap = self.map
 			self.agentPosition = tuple(agentPosition)
 			self.agentMap = np.full(self.map.shape,None)
 			self.agentMap[self.agentPosition] = self.map[self.agentPosition]
 			self.cave = self.agentPosition
 			MapController.__instance = self
+	def ResetOriginMap(self):
+		self.map = self.originMap
+		self.agentMap = np.full(self.map.shape,None)
+		self.agentPosition = self.cave
+		self.agentMap[self.agentPosition] = self.map[self.agentPosition]
 	def ConvertToMyIndex(self,_pos):
 		pass
 	def ConvertStadardIndex(self,_pos):
@@ -75,7 +81,7 @@ def ConvertToMyMap(_map,width,height):
 	return _maze
 
 def ReadFile():
-	path = os.getcwd() + "\SANDBOX\INPUT\map-10_2.txt"
+	path = os.getcwd() + "\map-1.txt"
 	file = open(path,'rt')
 	_sizeMap = int(file.readline())
 	_list_map = []
