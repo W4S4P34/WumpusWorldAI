@@ -7,7 +7,7 @@ from ..SETTINGS import gameflags as flags
 from ..SETTINGS import gamesettings as settings
 from ..SETTINGS import gamehandler as handle
 from ..OBJECTS import mapcontroller
-# from ..OBJECTS import agentcontroller
+from ..OBJECTS import agentcontroller
 from ..OBJECTS import character
 # from ..OBJECTS import button
 from ..OBJECTS import text
@@ -42,8 +42,17 @@ class PlayScene(scene.SceneBase):
         self.character_sprite = pg.sprite.Group(self.character)
 
         """ Grounds init """
-        self.old_ground, _ = self.handler.load_image(flags.TYPE_GROUND, flags.GROUND_ENTRANCE)
+        self.old_ground = None
+        self.new_ground = None
+
+        self.target_ground = None
+        self.affected_grounds = None
+
         self.new_ground, _ = self.handler.load_image(flags.TYPE_GROUND, flags.GROUND_ENTRANCE)
+
+        """ Blit init """
+        self.screen.blit(self.new_ground, self.character.pos)
+        self.character_sprite.draw(self.screen)
 
         """ Gameplay objects """
         self.countdown_timer = 4
@@ -100,15 +109,23 @@ class PlayScene(scene.SceneBase):
                 self.character.play(deltatime)
                 self.character_sprite.update(deltatime)
 
-                if self.character.map_state is not None:
-                    self.old_ground, self.new_ground = self.handler.detect_local_change(self.character.map_state,
-                                                                                        self.character.prev_pos,
-                                                                                        self.character.pos)
+                if self.character.task != -1 and self.character.task is not None:
+                    action, target = self.character.task
 
-                if self.character.score is not None:
-                    self.score = self.character.score
+                    if action == agentcontroller.Action.move or action == agentcontroller.Action.pick:
+                        self.old_ground, self.new_ground = \
+                            self.handler.detect_local_change_target(self.character.map_state,
+                                                                    self.character.prev_pos,
+                                                                    self.character.pos)
+                    elif action == agentcontroller.Action.shoot:
+                        self.target_ground, self.affected_grounds = \
+                            self.handler.detect_local_change_surroundings(self.character.map_state,
+                                                                          target)
 
-                if self.character.task is None:
+                    if self.character.score is not None:
+                        self.score = self.character.score
+
+                elif self.character.task is None:
                     self.countdown_timer = 2.5
                     self.state = flags.GAMEOVER
         # ----- Gameover
@@ -134,11 +151,6 @@ class PlayScene(scene.SceneBase):
             self.time_text.text_rect.move_ip((-32, 0))
 
             self.screen.blit(self.time_text.text, self.time_text.text_rect)
-            # ------------------------------------------------------------- #
-            # ===== Player
-            self.screen.blit(self.old_ground, self.character.prev_pos)
-            self.screen.blit(self.new_ground, self.character.pos)
-            self.character_sprite.draw(self.screen)
 
         # ----- Playing state
         elif self.state == flags.PLAYING:
@@ -176,21 +188,38 @@ class PlayScene(scene.SceneBase):
                 self.screen.blit(self.time_text.text, self.time_text.text_rect)
                 # ------------------------------------------------------------- #
                 # ===== Player
-                char_curpos = np.array(self.character.pos) // 48
-                char_prevpos = np.array(self.character.prev_pos) // 48
+                if self.character.task != -1 and self.character.task is not None:
+                    action, target = self.character.task
 
-                char_curpos[[0, 1]] = char_curpos[[1, 0]]
-                char_prevpos[[0, 1]] = char_prevpos[[1, 0]]
+                    if action == agentcontroller.Action.move or action == agentcontroller.Action.pick:
+                        char_curpos = np.array(self.character.pos) // 48
+                        char_prevpos = np.array(self.character.prev_pos) // 48
 
-                if self.character.map_state is not None:
-                    if tuple(char_curpos) != self.char_initpos and tuple(char_prevpos) == self.char_initpos:
-                        self.old_ground, _ = self.handler.load_image(flags.TYPE_GROUND, flags.GROUND_ENTRANCE)
-                        self.screen.blit(self.old_ground, self.character.prev_pos)
-                        self.screen.blit(self.new_ground, self.character.pos)
-                        self.character_sprite.draw(self.screen)
-                    else:
-                        self.screen.blit(self.old_ground, self.character.prev_pos)
-                        self.screen.blit(self.new_ground, self.character.pos)
+                        char_curpos[[0, 1]] = char_curpos[[1, 0]]
+                        char_prevpos[[0, 1]] = char_prevpos[[1, 0]]
+
+                        if tuple(char_curpos) != self.char_initpos and tuple(char_prevpos) == self.char_initpos:
+                            self.old_ground, _ = self.handler.load_image(flags.TYPE_GROUND, flags.GROUND_ENTRANCE)
+                            self.screen.blit(self.old_ground, self.character.prev_pos)
+                            self.screen.blit(self.new_ground, self.character.pos)
+                            self.character_sprite.draw(self.screen)
+                        else:
+                            self.screen.blit(self.old_ground, self.character.prev_pos)
+                            self.screen.blit(self.new_ground, self.character.pos)
+                            self.character_sprite.draw(self.screen)
+                    elif action == agentcontroller.Action.shoot:
+                        target_pos = tuple([ele * 48 for ele in reversed(target)])
+                        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+                        for idx, direction in enumerate(directions):
+                            direction = tuple(reversed(tuple([(coor + other_coor) * 48 for coor, other_coor in zip(target, direction)])))
+                            directions[idx] = direction
+
+                        self.screen.blit(self.target_ground, target_pos)
+                        for idx, affected in enumerate(self.affected_grounds):
+                            if not affected:
+                                continue
+                            else:
+                                self.screen.blit(affected, directions[idx])
                         self.character_sprite.draw(self.screen)
 
         # ----- Gameover

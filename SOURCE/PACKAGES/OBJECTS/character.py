@@ -30,7 +30,7 @@ class Character(pg.sprite.Sprite):
         self.agent.AgentInitialize()
 
         self.time = 0
-        self.event_receive_time = 0.5
+        self.event_receive_time = 0.25
 
         self.task = -1
         self.score = 0
@@ -62,7 +62,7 @@ class Character(pg.sprite.Sprite):
         self.index = 0
         self.image = self.images[self.index]
 
-        self.animation_time = 0.5
+        self.animation_time = 0.25
         self.current_time = 0
 
         self.animation_frames = 2
@@ -75,15 +75,34 @@ class Character(pg.sprite.Sprite):
         Args:
             dt: Time elapsed between each frame.
         """
-        if self.speed[0] > 0:
-            self.images = self.images_right
-        elif self.speed[0] < 0:
-            self.images = self.images_left
+        if self.task != -1 and self.task is not None:
+            action, target = self.task
 
-        if self.speed[1] > 0:
-            self.images = self.images_down
-        elif self.speed[1] < 0:
-            self.images = self.images_up
+            if action == agentcontroller.Action.move or action == agentcontroller.Action.pick:
+                if self.speed[0] > 0:
+                    self.images = self.images_right
+                elif self.speed[0] < 0:
+                    self.images = self.images_left
+
+                if self.speed[1] > 0:
+                    self.images = self.images_down
+                elif self.speed[1] < 0:
+                    self.images = self.images_up
+
+            elif action == agentcontroller.Action.shoot:
+                target_pos = tuple([ele * 48 for ele in reversed(target)])
+                direction = tuple([destination - source
+                                   for source, destination in zip(self.pos, target_pos)])
+
+                if direction[0] > 0:
+                    self.images = self.images_right
+                elif direction[0] < 0:
+                    self.images = self.images_left
+
+                if direction[1] > 0:
+                    self.images = self.images_down
+                elif direction[1] < 0:
+                    self.images = self.images_up
 
         self.current_time += dt
         if self.current_time >= self.animation_time:
@@ -95,15 +114,34 @@ class Character(pg.sprite.Sprite):
         """
         Updates the image of Sprite every 6 frame (approximately every 0.1 second if frame rate is 60).
         """
-        if self.speed[0] > 0:
-            self.images = self.images_right
-        elif self.speed[0] < 0:
-            self.images = self.images_left
+        if self.task != -1 and self.task is not None:
+            action, target = self.task
 
-        if self.speed[1] > 0:
-            self.images = self.images_down
-        elif self.speed[1] < 0:
-            self.images = self.images_up
+            if action == agentcontroller.Action.move or action == agentcontroller.Action.pick:
+                if self.speed[0] > 0:
+                    self.images = self.images_right
+                elif self.speed[0] < 0:
+                    self.images = self.images_left
+
+                if self.speed[1] > 0:
+                    self.images = self.images_down
+                elif self.speed[1] < 0:
+                    self.images = self.images_up
+
+            elif action == agentcontroller.Action.shoot:
+                target_pos = tuple([ele * 48 for ele in reversed(target)])
+                direction = tuple([destination - source
+                                   for source, destination in zip(self.pos, target_pos)])
+
+                if direction[0] > 0:
+                    self.images = self.images_right
+                elif direction[0] < 0:
+                    self.images = self.images_left
+
+                if direction[1] > 0:
+                    self.images = self.images_down
+                elif direction[1] < 0:
+                    self.images = self.images_up
 
         self.current_frame += 1
         if self.current_frame >= self.animation_frames:
@@ -128,14 +166,19 @@ class Character(pg.sprite.Sprite):
             self.task, self.score, self.map_state = self.agent.AgentPlay()
 
             if self.task is not None:
-                action, newpos = self.task
+                action, target = self.task
 
-                dst = tuple([ele * 48 for ele in reversed(newpos)])
-                src = self.pos
+                if action == agentcontroller.Action.move:
+                    dst = tuple([ele * 48 for ele in reversed(target)])
+                    src = self.pos
 
-                self.speed[0], self.speed[1] = tuple([destination - source for source, destination in zip(src, dst)])
+                    self.speed[0], self.speed[1] = tuple([destination - source for source, destination in zip(src, dst)])
 
-                self.rect.move_ip(self.speed)
+                    self.rect.move_ip(self.speed)
 
-                self.prev_pos = self.pos
-                self.pos = dst
+                    self.prev_pos = self.pos
+                    self.pos = dst
+                elif action == agentcontroller.Action.pick:
+                    self.prev_pos = self.pos
+                elif action == agentcontroller.Action.shoot:
+                    self.prev_pos = self.pos
