@@ -131,7 +131,7 @@ def ConvertToMyMap(_map,width,height):
 	return _maze
 
 def ReadFile():
-	path = os.getcwd() + "\SANDBOX\INPUT\map-0.txt"
+	path = os.getcwd() + "\SANDBOX\INPUT\map-10.txt"
 	file = open(path,'rt')
 	_sizeMap = int(file.readline())
 	_list_map = []

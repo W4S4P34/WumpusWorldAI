@@ -160,19 +160,17 @@ class AgentController:
 						wumpus = wumpus[1]
 						break
 				if(wumpus is None):
-						next_move = self.map_controller.cave
-						self.is_climb_out = True
-						self.bound_risk = 0
-				else:
-					adj_cell = [(0,-1),(-1,0),(0,1),(1,0)]
-					for i in adj_cell:
-						if(self.map_controller.agentMap[wumpus[0]+i[0],wumpus[1]+i[1]] is not None):
-							self.action.append((wumpus[0]+i[0],wumpus[1]+i[1]))
-							break
-					self.shoot_pos = wumpus
-					next_move = self.action.pop()
-					if(next_move == cur_pos):
-						return self.Probing()
+					self.bound_risk = 0
+					return self.Probing()
+				adj_cell = [(0,-1),(-1,0),(0,1),(1,0)]
+				for i in adj_cell:
+					if(self.map_controller.agentMap[wumpus[0]+i[0],wumpus[1]+i[1]] is not None):
+						self.action.append((wumpus[0]+i[0],wumpus[1]+i[1]))
+						break
+				self.shoot_pos = wumpus
+				next_move = self.action.pop()
+				if(next_move == cur_pos):
+					return self.Probing()
 			elif(not self.is_climb_out):
 					next_move = self.map_controller.cave
 					self.is_climb_out = True
