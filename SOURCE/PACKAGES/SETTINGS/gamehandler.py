@@ -92,7 +92,7 @@ class Handler():
 
     def detect_local_change_surroundings(self, map_state, target):
         target_ground = None
-        affected_grounds = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        affected_grounds = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
         if target is None:
             return None, None
@@ -129,6 +129,7 @@ class Handler():
                 target_aim = map_state[direction[0]][direction[1]]
             except IndexError:
                 affected = None
+                affected_grounds[idx] = affected
             else:
                 if target_aim == int(mapcontroller.State.B):
                     affected, _ = self.load_image(flags.TYPE_GROUND, flags.GROUND_BREEZE)

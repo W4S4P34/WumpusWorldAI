@@ -209,7 +209,7 @@ class PlayScene(scene.SceneBase):
                             self.character_sprite.draw(self.screen)
                     elif action == agentcontroller.Action.shoot:
                         target_pos = tuple([ele * 48 for ele in reversed(target)])
-                        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+                        directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
                         for idx, direction in enumerate(directions):
                             direction = tuple(reversed(tuple([(coor + other_coor) * 48 for coor, other_coor in zip(target, direction)])))
                             directions[idx] = direction

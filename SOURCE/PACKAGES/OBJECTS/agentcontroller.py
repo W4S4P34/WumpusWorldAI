@@ -88,12 +88,11 @@ class KnowledgeBase:
     def RemoveKB(self,_list_pos):
         # Tell KB that wumpus disappear
         tmp = _list_pos.pop(0)
-        self.agentFormulaWumpus.append([self.ConvertPosToNum(tmp,-1)])
-        self.agentBrainPit.add_clause([self.ConvertPosToNum(tmp,-1)])
+        self.agentFormulaWumpus.append([self.ConvertPosToNum(tmp, -1)])
+        self.agentBrainPit.add_clause([self.ConvertPosToNum(tmp, -1)])
         # Remove Stench
-
         for i in _list_pos:
-            tmp = self.ConvertPosToNum(i,1,1)
+            tmp = self.ConvertPosToNum(i, 1, 1)
             try:
                 self.agentFormulaWumpus.remove([tmp])
             except:
@@ -126,7 +125,10 @@ class AgentController:
         # Current position of agent
         cur_pos = self.map_controller.agentPosition
         self.visit.append(cur_pos)
-        action,safe_move = self.GetAction(cur_pos)
+        action = None
+        if(not self.is_climb_out and self.shoot_pos is None):
+            action,safe_move = self.GetAction(cur_pos)
+
         if(action is not None):
             if(action == Action.pick):
                 self.PickGold(cur_pos,self.map_controller.agentMap[cur_pos])
@@ -157,16 +159,16 @@ class AgentController:
                         wumpus = wumpus[1]
                         break
                 if(wumpus is None):
+                    self.shoot_pos = None
                     self.bound_risk = 0
                     return self.Probing()
                 adj_cell = [(0, -1), (-1, 0), (0, 1), (1, 0)]
                 for i in adj_cell:
                     tmp = (wumpus[0]+i[0], wumpus[1]+i[1])
                     if (IsValid(tmp[0], tmp[1], self.sizeMap) and self.map_controller.agentMap[tmp[0], tmp[1]] is not None):
-                        self.action.append((tmp[0], tmp[1]))
+                        next_move = (tmp[0], tmp[1])
                         break
                 self.shoot_pos = wumpus
-                next_move = self.action.pop()
                 if(next_move == cur_pos):
                     return self.Probing()
             elif(not self.is_climb_out):

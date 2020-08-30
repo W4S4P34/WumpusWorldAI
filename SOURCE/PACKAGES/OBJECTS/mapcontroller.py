@@ -52,6 +52,8 @@ class MapController:
 		return self.agentPosition
 	def AgentMove(self,_pos : tuple):
 		self.agentPosition = _pos
+		if(self.map[self.agentPosition] == int(State.W)):
+			print("Dead")
 		self.agentMap[self.agentPosition] = self.map[self.agentPosition]
 	def Shoot(self,_pos : tuple):
 		if(self.map[_pos] == int(State.W)):
@@ -131,7 +133,7 @@ def ConvertToMyMap(_map,width,height):
 	return _maze
 
 def ReadFile():
-	path = os.getcwd() + "\INPUT\map-01.txt"
+	path = os.getcwd() + "\INPUT\map-02.txt"
 	file = open(path,'rt')
 	_sizeMap = int(file.readline())
 	_list_map = []
