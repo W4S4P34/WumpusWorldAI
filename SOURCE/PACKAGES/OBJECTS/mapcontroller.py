@@ -1,4 +1,8 @@
 ##########################
+#    Custom Libraries    #
+from ..SETTINGS import gameflags as flags
+from ..SETTINGS import gamesettings as settings
+##########################
 #   Built-in Libraries   #
 import numpy as np
 from enum import IntEnum
@@ -26,25 +30,23 @@ class MapController:
 
 	def __init__(self):
 		if MapController.__instance == None:
-			_map,agentPosition = ReadFile()
-			self.width = len(_map)
-			self.height = len(_map[0])
-			self.map = ConvertToMyMap(_map,self.width,self.height)
-			self.originMap = self.map.copy()
-			self.agentPosition = tuple(agentPosition)
-			self.agentMap = np.full(self.map.shape,None)
-			self.agentMap[self.agentPosition] = self.map[self.agentPosition]
-			self.cave = self.agentPosition
+			self.width = None
+			self.height = None
+			self.map = None
+			self.agentPosition = None
+			self.agentMap = None
+			self.cave = None
 			MapController.__instance = self
-	def ResetOriginMap(self):
-		self.map = self.originMap.copy()
+	def InitializeMap(self,pathname):
+		_map,agentPosition = ReadFile(pathname)
+		self.width = len(_map)
+		self.height = len(_map[0])
+		self.map = ConvertToMyMap(_map,self.width,self.height)
+		self.agentPosition = tuple(agentPosition)
 		self.agentMap = np.full(self.map.shape,None)
-		self.agentPosition = self.cave
 		self.agentMap[self.agentPosition] = self.map[self.agentPosition]
-	def ConvertToMyIndex(self,_pos):
-		pass
-	def ConvertStadardIndex(self,_pos):
-		pass
+		self.cave = self.agentPosition
+
 	def UpdateAgentMap(self,_pos,state):
 		self.agentMap[_pos] = state
 		self.map[_pos] = state
@@ -132,8 +134,8 @@ def ConvertToMyMap(_map,width,height):
 				_maze[i,j] += int(State.GBS)
 	return _maze
 
-def ReadFile():
-	path = os.getcwd() + "\INPUT\map-02.txt"
+def ReadFile(mapname):
+	path = os.path.join(settings.PATH, flags.F_INPUT, mapname)
 	file = open(path,'rt')
 	_sizeMap = int(file.readline())
 	_list_map = []

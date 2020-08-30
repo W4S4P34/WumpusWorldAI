@@ -155,7 +155,7 @@ class AgentController:
                     except:
                         wumpus = None
                         break
-                    if(wumpus[0] <= 3):
+                    if(wumpus[0] <= 3 and self.agentKB.IsWumpusThere(wumpus[1])):
                         wumpus = wumpus[1]
                         break
                 if(wumpus is None):
@@ -350,7 +350,8 @@ def RandomMap():
             for j in range(len(map[0])):
                 ele = str(map[i,j])
                 f.write(ele)
-                f.write(".")
+                if(j != len(map[0])-1):
+                    f.write(".")
             f.write("\n")
         f.close()
         ind += 1

@@ -20,6 +20,7 @@ ICO = 'Game_Icon.png'
 BG = 'Intro.png'
 """# Button #"""
 BUTTON_BG = 'Button_UI.png'
+MAPBT_BG = 'Button_Map_UI.png'
 """# Fonts #"""
 FONT_FIPPS = 'Fipps-Regular.otf'
 FONT_PIXELLCD = 'Pixel-LCD-7.ttf'

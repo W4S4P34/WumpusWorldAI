@@ -1,7 +1,7 @@
 ##########################
 #    Custom Libraries    #
 from . import scenebase as scene
-from . import mapselectingscene
+from . import playscene
 from ..SETTINGS import gameflags as flags
 from ..SETTINGS import gamesettings as settings
 from ..SETTINGS import gamehandler as handle
@@ -13,7 +13,7 @@ import os
 import pygame as pg
 
 
-class TitleScene(scene.SceneBase):
+class MapSeletingScene(scene.SceneBase):
     def __init__(self, screen=None):
         super().__init__(screen)
 
@@ -28,19 +28,26 @@ class TitleScene(scene.SceneBase):
         """ Buttons list """
         """# Create buttons list #"""
         self.button_list = []
-        for _ in range(2):
-            self.button_list.append(button.Button(flags.BUTTON_BG))
+
+        self.map = None
+        self.map_number = len([name for name in os.listdir(os.path.join(settings.PATH, flags.F_INPUT))
+                               if os.path.isfile(os.path.join(settings.PATH, flags.F_INPUT, name))])
+
+        for _ in range(1, self.map_number + 1):
+            self.button_list.append(button.Button(flags.MAPBT_BG))
 
         """# Put buttons in right places #"""
-        distance_hor = 0      # Horizontal distance between buttons
+        distance_hor = 112       # Horizontal distance between buttons
         distance_ver = 20       # Vertical distance between buttons
 
         for idx, bt in enumerate(self.button_list):
-            bt.rect.center = self.screen.get_rect().center
+            row_idx = idx // 5
+            col_idx = idx % 5
 
             bt_width = bt.rect[2]
             bt_height = bt.rect[3]
-            bt.rect.move_ip((0 * (bt_width + distance_hor), idx * (bt_height + distance_ver)))
+            bt.rect.move_ip((128 + (col_idx * (bt_width + distance_hor)),
+                            (128 + (row_idx * (bt_height + distance_ver)))))
 
         # Texts
         pg.font.init()
@@ -50,7 +57,7 @@ class TitleScene(scene.SceneBase):
 
         title_font = pg.font.Font(path, 35)
 
-        self.title = text.Text('Wumpus - The death is coming', title_font, (255, 255, 255))
+        self.title = text.Text('Select map', title_font, (255, 255, 255))
         self.title.text_rect.centerx = self.screen.get_rect().centerx
         self.screen.blit(self.title.text, self.title.text_rect)
         """# Buttons' texts list #"""
@@ -59,29 +66,22 @@ class TitleScene(scene.SceneBase):
         button_font = pg.font.Font(path, 20)
 
         for idx in range(len(self.button_list)):
-            txt = ''
-            if idx == 0:
-                txt = 'Play'
-            elif idx == 1:
-                txt = 'Exit'
-            self.text_list.append(text.Text(txt, button_font, (255, 255, 255)))
+            map_name = str(idx + 1)
+            self.text_list.append(text.Text(map_name, button_font, (255, 255, 255)))
 
         for idx, t in enumerate(self.text_list):
             t.text_rect.center = self.button_list[idx].rect.center
-            t.text_rect.move_ip((5, 0))
 
         # State
-        self.state = flags.INTRO
+        self.state = flags.MAPSELECT
 
     def ProcessInput(self, events, pressed_keys):
         for event in events:
             if event.type == pg.MOUSEBUTTONDOWN:
                 for idx, bt in enumerate(self.button_list):
+                    self.map = 'map-' + str(idx + 1).zfill(2) + '.txt'
                     if bt.rect.collidepoint(pg.mouse.get_pos()):
-                        if idx == 0:
-                            self.SwitchToScene(mapselectingscene.MapSeletingScene(self.screen))
-                        elif idx == 1:
-                            self.Terminate()
+                        self.SwitchToScene(playscene.PlayScene(self.screen, self.map))
 
     def Update(self, deltatime):
         ##################################################################################

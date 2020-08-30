@@ -124,7 +124,6 @@ class GameOver(scene.SceneBase):
                 for idx, bt in enumerate(self.button_list):
                     if bt.rect.collidepoint(pg.mouse.get_pos()):
                         if idx == 0:
-                            mapcontroller.MapController.GetInstance().ResetOriginMap()
                             self.SwitchToScene(titlescene.TitleScene(self.screen))
                         elif idx == 1:
                             self.Terminate()

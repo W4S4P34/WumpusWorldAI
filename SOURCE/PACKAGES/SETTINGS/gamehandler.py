@@ -94,9 +94,6 @@ class Handler():
         target_ground = None
         affected_grounds = [(0, 1), (0, -1), (1, 0), (-1, 0)]
 
-        if target is None:
-            return None, None
-
         target_aim = map_state[target[0]][target[1]]
 
         if target_aim == int(mapcontroller.State.B):

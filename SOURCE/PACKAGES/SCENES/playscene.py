@@ -19,11 +19,13 @@ import numpy as np
 
 
 class PlayScene(scene.SceneBase):
-    def __init__(self, screen=None):
+    def __init__(self, screen=None, map=None):
         super().__init__(screen)
-
         """ Init Handler """
         self.handler = handle.Handler()
+
+        """ Init map """
+        mapcontroller.MapController.GetInstance().InitializeMap(map)
 
         """ Add background """
         self.default_map_size = tuple([mapcontroller.MapController.GetInstance().width * 48,
