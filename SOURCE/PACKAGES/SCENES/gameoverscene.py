@@ -5,6 +5,7 @@ from . import titlescene
 from ..SETTINGS import gameflags as flags
 from ..SETTINGS import gamesettings as settings
 from ..SETTINGS import gamehandler as handle
+from ..OBJECTS import mapcontroller
 from ..OBJECTS import button
 from ..OBJECTS import text
 ##########################
@@ -123,6 +124,7 @@ class GameOver(scene.SceneBase):
                 for idx, bt in enumerate(self.button_list):
                     if bt.rect.collidepoint(pg.mouse.get_pos()):
                         if idx == 0:
+                            mapcontroller.MapController.GetInstance().ResetOriginMap()
                             self.SwitchToScene(titlescene.TitleScene(self.screen))
                         elif idx == 1:
                             self.Terminate()
@@ -137,9 +139,9 @@ class GameOver(scene.SceneBase):
         if self.countdown <= 0:
             if self.inc_score != self.score:
                 if self.inc_score < self.score:
-                    self.inc_score += 1
+                    self.inc_score += 10
                 if self.inc_score > self.score:
-                    self.inc_score -= 1
+                    self.inc_score -= 10
                 else:
                     self.inc_score = self.score
 

@@ -30,7 +30,7 @@ class Character(pg.sprite.Sprite):
         self.agent.AgentInitialize()
 
         self.time = 0
-        self.event_receive_time = 0.1
+        self.event_receive_time = 0.5
 
         self.task = -1
         self.score = 0
@@ -62,7 +62,7 @@ class Character(pg.sprite.Sprite):
         self.index = 0
         self.image = self.images[self.index]
 
-        self.animation_time = 0.1
+        self.animation_time = 0.5
         self.current_time = 0
 
         self.animation_frames = 2

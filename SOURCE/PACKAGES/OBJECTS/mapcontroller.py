@@ -30,6 +30,7 @@ class MapController:
 			self.width = len(_map)
 			self.height = len(_map[0])
 			self.map = ConvertToMyMap(_map,self.width,self.height)
+			self.originMap = self.map.copy()
 			self.agentPosition = tuple(agentPosition)
 			self.agentMap = np.full(self.map.shape,None)
 			self.agentMap[self.agentPosition] = self.map[self.agentPosition]
@@ -46,6 +47,11 @@ class MapController:
 		return self.agentPosition
 	def AgentMove(self,_pos : tuple):
 		self.agentPosition = _pos
+		self.agentMap[self.agentPosition] = self.map[self.agentPosition]
+	def ResetOriginMap(self):
+		self.map = self.originMap.copy()
+		self.agentMap = np.full(self.map.shape,None)
+		self.agentPosition = self.cave
 		self.agentMap[self.agentPosition] = self.map[self.agentPosition]
 
 def ConvertToMyMap(_map,width,height):
