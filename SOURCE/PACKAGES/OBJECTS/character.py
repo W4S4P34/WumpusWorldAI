@@ -30,7 +30,7 @@ class Character(pg.sprite.Sprite):
         self.agent.AgentInitialize()
 
         self.time = 0
-        self.event_receive_time = 0.25
+        self.event_receive_time = 0.01
 
         self.task = -1
         self.score = 0

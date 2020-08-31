@@ -127,12 +127,12 @@ class AgentController:
         self.visit.append(cur_pos)
         action = None
         if(not self.is_climb_out and self.shoot_pos is None):
-            action,safe_move = self.GetAction(cur_pos)
+            action, safe_move = self.GetAction(cur_pos)
 
         if(action is not None):
             if(action == Action.pick):
-                self.PickGold(cur_pos,self.map_controller.agentMap[cur_pos])
-                return (Action.pick,cur_pos)
+                self.PickGold(cur_pos, self.map_controller.agentMap[cur_pos])
+                return (Action.pick, cur_pos)
             elif(action == Action.move):
                 for ele in safe_move:
                     if ele not in self.action:
@@ -181,8 +181,30 @@ class AgentController:
             self.action.append(next_move)
         return (Action.move,move_path)
 
-
-    def GetAction(self,_pos):
+    def Foo(self, _pos):
+        adj_cell = [(0, -1), (-1, 0), (0, 1), (1, 0)]
+        visit = []
+        stack = [(0, _pos)]
+        sum = 0
+        while True:
+            tmp = None
+            try:
+                depth, tmp = stack.pop()
+            except:
+                break
+            print(self.map_controller.agentMap[tmp])
+            visit.append(tmp)
+            if(self.map_controller.agentMap[tmp] is not None):
+                sum += 1
+            if(depth == 2):
+                continue
+            for i in adj_cell:
+                tmp2 = (tmp[0] + i[0], tmp[1] + i[1])
+                if(IsValid(tmp2[0], tmp2[1], self.sizeMap) and tmp2 not in visit):
+                    stack.append((depth+1, tmp2))
+        print("Sum: " + str(sum))
+        return sum
+    def GetAction(self, _pos):
         cur_state = self.map_controller.agentMap[_pos]
         # State found Gold
         if(cur_state == int(mapctrl.State.G) or cur_state >= int(mapctrl.State.GB) and cur_state <= int(mapctrl.State.GBS)):
@@ -210,15 +232,18 @@ class AgentController:
                             break
                     if(flag_append):
                         self.wumpus_pos.append((amount_of_stench,tmp))
+                print("Wumpus" + str(tmp))
                 continue
             # Check is Pit there by logic inference
             if(self.agentKB.IsPitThere(tmp)):
+                print("Pit" + str(tmp))
                 continue
             # Safe
             safe_move.append(tmp)
         if(len(safe_move) > 0):
-            return (Action.move,safe_move)
-        return None,None
+            print("! Wumpus" + str(tmp) + " ^ " + "! Pit" + str(tmp))
+            return (Action.move, safe_move)
+        return None, None
         # Is valid, is not visit and is safe
     def AgentSense(self,_pos):
         cur_state = self.map_controller.agentMap[_pos]
@@ -270,7 +295,8 @@ class AgentController:
             self.score += 100
         else:
             self.score -= 100
-        return (action,next_move),self.score,self.map_controller.agentMap
+        print(action, next_move)
+        return (action, next_move), self.score, self.map_controller.agentMap
 
     def DelAgent(self):
         # Remove KB
@@ -278,81 +304,3 @@ class AgentController:
         # Remove AgentMap:
         self.map_controller = None
 ##########################################################################################
-
-import random
-import os
-def RandomMap():
-    size_map = 10
-    ind = 1
-    map = np.full((10,10),None)
-    max_randomtext = 10
-    while True:
-        if(max_randomtext == 0):
-            break
-        map = np.full((10,10),None)
-        max_gold = random.randint(5,15)
-        max_pit = random.randint(3,5)
-        max_wumpus = random.randint(1,3)
-        while True:
-            if(max_gold > 0):
-                list = []
-                gold_pos = (random.randint(0,9),random.randint(0,9))
-                if(map[gold_pos] is None):
-                    list.append('G')
-                    map[gold_pos] = np.array(list)[0]
-                    max_gold -= 1
-            if(max_pit > 0):
-                list = []
-                pit_pos = (random.randint(0,9),random.randint(0,9))
-                if(map[pit_pos] is None):
-                    list.append('P')
-                    map[pit_pos] = np.array(list)[0]
-                    max_pit -= 1
-            if(max_wumpus > 0):
-                list = []
-                wumpus_pos = (random.randint(0,9),random.randint(0,9))
-                if(map[wumpus_pos] is None):
-                    list.append('W')
-                    map[wumpus_pos] = np.array(list)[0]
-                    max_wumpus -= 1
-            if(max_wumpus == 0 and max_pit == 0 and max_gold == 0):
-                break
-        adj = [(1,0),(-1,0),(0,1),(0,-1)]
-        for i in range(size_map):
-            for j in range(size_map):
-                if(map[i,j] is None or map[i,j] == 'G'):
-                    lists = ""
-                    if(map[i,j] == 'G'):
-                        lists += "G"
-                    is_Stench = False
-                    is_Breeze = False
-                    for k in adj:
-                        tmp = (i+k[0],j+k[1])
-                        if(IsValid(tmp[0],tmp[1],(size_map,size_map))):
-                            if(map[tmp[0],tmp[1]] == 'P' and ('B' not in lists)):
-                                lists += "B"
-                            elif(map[tmp[0],tmp[1]] == 'W' and ('S' not in lists)):
-                                lists += "S"
-                    if(len(lists) == 0):
-                        lists += "-"
-                    map[i,j] = np.array(lists)
-        agent_pos = None
-        while True:
-            agent_pos = (random.randint(0,9),random.randint(0,9))
-            if(map[agent_pos] == "-"):
-                break
-        map[agent_pos] = "A"
-        path = os.getcwd() + "\SANDBOX\INPUT\map"
-        path = path + "-" + str(ind) + ".txt"
-        f = open(path,"w")
-        f.write("10\n")
-        for i in range(len(map)):
-            for j in range(len(map[0])):
-                ele = str(map[i,j])
-                f.write(ele)
-                if(j != len(map[0])-1):
-                    f.write(".")
-            f.write("\n")
-        f.close()
-        ind += 1
-        max_randomtext -= 1
