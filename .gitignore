@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.json
+.vs/Wumpus-World-AI/v16/.suo
+*.sqlite
+SOURCE/.vs/SOURCE/v16/.suo
