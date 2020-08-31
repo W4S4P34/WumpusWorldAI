@@ -155,7 +155,7 @@ class AgentController:
                     except:
                         wumpus = None
                         break
-                    if(wumpus[0] <= 3 and self.agentKB.IsWumpusThere(wumpus[1])):
+                    if(wumpus[0] <= 3 and self.agentKB.IsWumpusThere(wumpus[1]) and self.Foo(wumpus[1]) >= 8):
                         wumpus = wumpus[1]
                         break
                 if(wumpus is None):
@@ -183,7 +183,7 @@ class AgentController:
 
     def Foo(self, _pos):
         adj_cell = [(0, -1), (-1, 0), (0, 1), (1, 0)]
-        visit = []
+        visit = [_pos]
         stack = [(0, _pos)]
         sum = 0
         while True:
@@ -192,17 +192,15 @@ class AgentController:
                 depth, tmp = stack.pop()
             except:
                 break
-            print(self.map_controller.agentMap[tmp])
-            visit.append(tmp)
-            if(self.map_controller.agentMap[tmp] is not None):
+            if(self.map_controller.agentMap[tmp] is None):
                 sum += 1
-            if(depth == 2):
+            if(depth == 3):
                 continue
             for i in adj_cell:
                 tmp2 = (tmp[0] + i[0], tmp[1] + i[1])
                 if(IsValid(tmp2[0], tmp2[1], self.sizeMap) and tmp2 not in visit):
                     stack.append((depth+1, tmp2))
-        print("Sum: " + str(sum))
+                    visit.append(tmp2)
         return sum
     def GetAction(self, _pos):
         cur_state = self.map_controller.agentMap[_pos]

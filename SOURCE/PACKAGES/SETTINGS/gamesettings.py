@@ -1,8 +1,8 @@
 import os
 
 # Path settings
-os.chdir('../')
-PATH = os.getcwd()
+os.chdir('..')
+PATH = os.path.abspath(os.curdir)
 
 # Screen settings
 WIDTH = 1024
